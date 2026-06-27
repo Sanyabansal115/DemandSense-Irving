@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-from plotly.subplots import make_subplots
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from forecasting_engine import run_forecasting_pipeline, detect_anomalies, compute_sustainability_impact
@@ -71,7 +69,7 @@ df = load_data()
 # -- Sidebar ------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## ?? DemandSense")
-    st.markdown("**Irving Tissue · Toronto Plant**")
+    st.markdown("**Irving Tissue ï¿½ Toronto Plant**")
     st.markdown("---")
 
     retailer = st.selectbox("Retailer", sorted(df["retailer"].unique()), index=1)
@@ -90,8 +88,8 @@ with st.sidebar:
 
 
 # -- Header -------------------------------------------------------------------
-st.markdown("## DemandSense — Private Label Demand Intelligence")
-st.markdown(f"Showing **{sku}** · **{retailer}** · Toronto Converting Plant")
+st.markdown("## DemandSense ï¿½ Private Label Demand Intelligence")
+st.markdown(f"Showing **{sku}** ï¿½ **{retailer}** ï¿½ Toronto Converting Plant")
 
 # -- KPI Row ------------------------------------------------------------------
 subset = df[(df["retailer"] == retailer) & (df["sku"] == sku)].copy()
@@ -124,7 +122,7 @@ st.markdown("---")
 col_left, col_right = st.columns([3, 1])
 
 with col_left:
-    st.markdown("### Demand forecast — next 12 weeks")
+    st.markdown("### Demand forecast ï¿½ next 12 weeks")
     with st.spinner("Running Prophet model..."):
         fc = get_forecast(retailer, sku)
 
@@ -185,7 +183,7 @@ with col_left:
         font=dict(family="Inter, sans-serif", size=12)
     )
     st.plotly_chart(fig, use_container_width=True)
-    st.caption(f"Prophet model MAPE on holdout: **{fc['mape']}%** · 90% confidence interval shown")
+    st.caption(f"Prophet model MAPE on holdout: **{fc['mape']}%** ï¿½ 90% confidence interval shown")
 
 with col_right:
     st.markdown("### Anomaly feed")
@@ -234,7 +232,7 @@ with col_a:
     )
     fig2.update_xaxes(side="top")
     st.plotly_chart(fig2, use_container_width=True)
-    st.caption("Lower = better. Red cells = highest forecast error — priority targets for model improvement.")
+    st.caption("Lower = better. Red cells = highest forecast error ï¿½ priority targets for model improvement.")
 
 with col_b:
     st.markdown("### Sustainability impact")
@@ -264,7 +262,7 @@ with col_b:
 st.markdown("---")
 st.markdown(
     "<div style='text-align:center;font-size:12px;color:#9CA3AF;'>"
-    "DemandSense · Research Project · Software Engineering Technology (AI) · "
+    "DemandSense ï¿½ Research Project ï¿½ Software Engineering Technology (AI) ï¿½ "
     "Built as part of Data Modelling Co-op application to Irving Tissue, Toronto"
     "</div>",
     unsafe_allow_html=True

@@ -9,40 +9,53 @@ from sklearn.metrics import mean_absolute_percentage_error
 import warnings
 warnings.filterwarnings("ignore")
 
+
 def run_forecasting_pipeline(df, retailer, sku, forecast_weeks=12):
+    # Filter the dataset for the specified retailer and SKU, 
+    # and sort by week
     subset = df[(df["retailer"] == retailer) & (df["sku"] == sku)].copy()
     subset = subset.sort_values("week").reset_index(drop=True)
 
+    # prepare the data for Prophet by renaming columns to 'ds' and 'y'
     prophet_df = subset[["week", "actual_demand"]].rename(
         columns={"week": "ds", "actual_demand": "y"}
     )
 
     # add promo regressor
+    # Converts a boolean (True/False) promotional flag into integers (1 or 0).
     prophet_df["is_promo"] = subset["is_promo"].astype(int).values
 
     model = Prophet(
-        changepoint_prior_scale=0.05,
-        seasonality_prior_scale=10,
-        weekly_seasonality=False,
-        yearly_seasonality=True,
-        interval_width=0.90,
+        changepoint_prior_scale=0.05,       # controls the flexibility of the trend component
+        seasonality_prior_scale=10,         # controls the strength of the seasonality component   
+        weekly_seasonality=False,           # Since this is weekly data, we turn off daily/weekly tracking.
+        yearly_seasonality=True,            # Enables tracking of annual trends 
+        interval_width=0.90,                # Sets the width of the uncertainty intervals
     )
-    model.add_regressor("is_promo")
-    model.fit(prophet_df)
+    model.add_regressor("is_promo")         # Tells Prophet to use is_promo as an extra feature (regressor) 
+                                            # to help explain why demand spikes on certain weeks.
+    model.fit(prophet_df)                   
 
     future = model.make_future_dataframe(periods=forecast_weeks, freq="W")
     future["is_promo"] = 0  # assume no promo in forecast horizon
 
-    forecast = model.predict(future)
+    #Calculates the demand predictions (yhat) 
+    #for both the historical period and the 12 future weeks.
+    forecast = model.predict(future)        
 
     # split into history + future
     history_forecast = forecast[forecast["ds"] <= prophet_df["ds"].max()].copy()
     future_forecast  = forecast[forecast["ds"] >  prophet_df["ds"].max()].copy()
 
     # MAPE on history
+    # Merges the true historical demand (y) and 
+    # the model's back-fitted guess (yhat) on matching dates.
     merged = prophet_df.merge(history_forecast[["ds","yhat"]], on="ds")
+
+    # Evaluates model accuracy by computing the Mean Absolute Percentage Error
     mape = mean_absolute_percentage_error(merged["y"], merged["yhat"]) * 100
 
+    # Returns a dictionary containing the historical data, forecasts, MAPE, and the trained model.
     return {
         "history":        prophet_df,
         "history_fc":     history_forecast,
@@ -90,11 +103,13 @@ def compute_sustainability_impact(df):
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("/home/claude/DemandSense-Irving/data/irving_demand_data.csv", parse_dates=["week"])
+    import os
+    _data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+    df = pd.read_csv(os.path.join(_data_dir, "irving_demand_data.csv"), parse_dates=["week"])
 
     print("Running anomaly detection...")
     df_with_anomalies = detect_anomalies(df)
-    df_with_anomalies.to_csv("/home/claude/DemandSense-Irving/data/irving_demand_with_anomalies.csv", index=False)
+    df_with_anomalies.to_csv(os.path.join(_data_dir, "irving_demand_with_anomalies.csv"), index=False)
     print(f"Detected anomalies: {df_with_anomalies['is_detected_anomaly'].sum()}")
 
     print("\nRunning Prophet forecast for Loblaws - Bath Tissue 12pk...")
