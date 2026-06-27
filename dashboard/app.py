@@ -53,7 +53,8 @@ st.markdown("""
 def load_data():
     df = pd.read_csv(
         os.path.join(os.path.dirname(__file__), '..', 'data', 'irving_demand_data.csv'),
-        parse_dates=["week"]
+        parse_dates=["week"],
+        encoding="utf-8",
     )
     return detect_anomalies(df)
 

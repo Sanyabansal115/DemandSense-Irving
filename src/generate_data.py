@@ -89,7 +89,7 @@ def generate_dataset(start="2022-01-01", end="2024-12-31"):
 
     df = pd.DataFrame(rows)
     out_path = os.path.join(os.path.dirname(__file__), "..", "data", "irving_demand_data.csv")
-    df.to_csv(out_path, index=False)
+    df.to_csv(out_path, index=False, encoding="utf-8")
     print(f"Generated {len(df):,} rows across {df['retailer'].nunique()} retailers and {df['sku'].nunique()} SKUs")
     print(f"Date range: {df['week'].min().date()} → {df['week'].max().date()}")
     print(f"Anomalies injected: {df['is_anomaly'].sum()}")
